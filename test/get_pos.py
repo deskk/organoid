@@ -1,7 +1,7 @@
 import requests
 
-MOONRAKER_HOST = '172.20.10.2'  # Replace with your Moonraker host IP
-MOONRAKER_PORT = 7125
+MOONRAKER_HOST = '' 
+MOONRAKER_PORT = ''
 
 def get_position():
     url = f'http://{MOONRAKER_HOST}:{MOONRAKER_PORT}/printer/objects/query?toolhead'

@@ -4,10 +4,9 @@ Test control_syringe(volume_uL) Function
 
 import requests
 
-MOONRAKER_HOST = '172.20.10.2'  # Replace with your Moonraker host IP
-MOONRAKER_PORT = 7125
+MOONRAKER_HOST = ''
+MOONRAKER_PORT = ''
 
-# Syringe settings
 SYRINGE_SPEED = 1000  # mm/min
 SYRINGE_EXTRUDE_LENGTH_PER_UL = 1.0  # mm per uL, needs to be calibrated
 

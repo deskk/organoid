@@ -4,8 +4,8 @@
 
 import requests
 
-MOONRAKER_HOST = '172.20.10.2'  # Replace with your Moonraker host IP
-MOONRAKER_PORT = 7125
+MOONRAKER_HOST = ''
+MOONRAKER_PORT = ''
 
 def move_to(position, speed=3000, blocking=False):
     x, y, z = position
@@ -22,8 +22,7 @@ def move_to(position, speed=3000, blocking=False):
     return True
 
 if __name__ == '__main__':
-    # Move to a safe test position
-    test_position = (50, 50, 50)  # Adjust to safe coordinates
+    test_position = (50, 50, 50)
     success = move_to(test_position, speed=3000, blocking=True)
     if success:
         print(f"Moved to position {test_position}")
