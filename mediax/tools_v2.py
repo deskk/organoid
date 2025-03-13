@@ -2,7 +2,6 @@
 version 2
 '''
 
-
 import requests
 import time
 import cv2
@@ -127,15 +126,15 @@ def move_to(config, position, speed=None, description=''):
     cx, cy, cz = current[:3]
     x, y, z = position
 
-    # Fill in None with current coords
+    # fill in None with current coords
     if x is None: x = cx
     if y is None: y = cy
     if z is None: z = cz
 
-    # Always absolute coords
+    # always absolute coords
     send_gcode(config, 'G90')
 
-    # Issue the move
+    # issue the move
     gcode_cmd = f"G1 X{x} Y{y} Z{z} F{speed}"
     if description:
         log(f'Action: {description} => {gcode_cmd}')
@@ -264,7 +263,6 @@ def run_media_exchange(config, skip_well_set, final_save_dir, camera_id, yolo_pa
     :param camera_id: Which camera device ID to use (e.g. 0)
     :param yolo_path: Path to YOLO model weights
     """
-    # For convenience
     FRESH_MEDIA_POS = config["FRESH_MEDIA_POS"]
     WATER_POS       = config["WATER_POS"]
     WASTE_MEDIA_POS = config["WASTE_MEDIA_POS"]
@@ -281,7 +279,7 @@ def run_media_exchange(config, skip_well_set, final_save_dir, camera_id, yolo_pa
     CAMERA_STABILIZE_TIME = config["CAMERA_STABILIZE_TIME"]
     CONFIDENCE_THRESHOLD = config["CONFIDENCE_THRESHOLD"]
 
-    # Extra offset in the well to adjust for evaporation
+    # extra offset in the well to adjust for evaporation
     evaporation = EVAPORATION_OFFSET
 
     original_image_folder = os.path.join(final_save_dir, "original_images")
@@ -299,7 +297,7 @@ def run_media_exchange(config, skip_well_set, final_save_dir, camera_id, yolo_pa
         model_path=yolo_path,
         confidence_threshold=CONFIDENCE_THRESHOLD)
 
-    # 3) Generate well locations (8 rows x 12 cols)
+    # 3) generate well locations (8 rows x 12 cols)
     well_locations = []
     for row in range(8):
         for col in range(12):
@@ -312,18 +310,18 @@ def run_media_exchange(config, skip_well_set, final_save_dir, camera_id, yolo_pa
             y = config["SYRINGE_ORIGIN_Y"] + row * config["WELL_SPACING_Y"]
             well_locations.append((row, col, x, y))
 
-    # 4) Perform media exchange on each well
+    # 4) perform media exchange on each well
     for (row, col, x, y) in well_locations:
         well_label = row_col_to_well_label(row, col)
         log(f"Processing well: {well_label} (row={row}, col={col})")
 
-        # Pull water for mixing offset
+        # pull water for mixing offset
         move_to(config, [WATER_POS[0], WATER_POS[1], SAFE_Z])
         move_to(config, [WATER_POS[0], WATER_POS[1], EXTRACT_Z_DISH])
         control_syringe(config, -evaporation)  # aspirate from water
         move_to(config, [WATER_POS[0], WATER_POS[1], SAFE_Z])
 
-        # Go to the well
+        # go to the well
         move_to(config, [x, y, SAFE_Z])
         move_to(config, [x, y, EXTRACT_Z])
         control_syringe(config, evaporation + DISPENSE_OFFSET)  # dispense mixing volume
@@ -334,12 +332,12 @@ def run_media_exchange(config, skip_well_set, final_save_dir, camera_id, yolo_pa
         found = False
         attempts = 0
         while True:
-            # Aspirate old media
+            # aspirate old media
             move_to(config, [x, y, EXTRACT_Z])
             control_syringe(config, -EXCHANGE_MEDIA_VOLUME)
             move_to(config, [x, y, CAMERA_Z])
 
-            # Move camera over the well
+            # move camera over the well
             move_to(config, [x + CAMERA_OFFSET[0], y + CAMERA_OFFSET[1], CAMERA_Z])
             log("[run_media_exchange] Waiting for camera to stabilize...")
             time.sleep(CAMERA_STABILIZE_TIME)
@@ -352,7 +350,7 @@ def run_media_exchange(config, skip_well_set, final_save_dir, camera_id, yolo_pa
             if not ret:
                 raise RuntimeError("[run_media_exchange] error retrieving camera frame")
 
-            # Use well label in filename (e.g. 'A1_attempt0.png')
+            # use well label in filename (eg. 'A1_attempt0.png')
             image_filename = f"{well_label}_attempt{attempts}.png"
             image_path = os.path.join(original_image_folder, image_filename)
             cv2.imwrite(image_path, well_image_bgr)
@@ -370,7 +368,7 @@ def run_media_exchange(config, skip_well_set, final_save_dir, camera_id, yolo_pa
             else:
                 attempts += 1
                 log(f"[run_media_exchange] No object found on attempt {attempts-1}. Retrying capture...")
-                # Return the media to well before retry
+                # return the media to well before retry
                 move_to(config, [x, y, SAFE_Z])
                 move_to(config, [x, y, EXTRACT_Z])
                 control_syringe(config, EXCHANGE_MEDIA_VOLUME + DISPENSE_OFFSET)
@@ -378,20 +376,20 @@ def run_media_exchange(config, skip_well_set, final_save_dir, camera_id, yolo_pa
                 control_syringe(config, -DISPENSE_OFFSET)
                 time.sleep(MIXING_WAIT_TIME)
 
-        # Dispose old media in the waste container
+        # dispose old media in the waste container
         move_to(config, [WASTE_MEDIA_POS[0], WASTE_MEDIA_POS[1], SAFE_Z])
         move_to(config, [WASTE_MEDIA_POS[0], WASTE_MEDIA_POS[1], EXTRACT_Z_DISH])
         control_syringe(config, EXCHANGE_MEDIA_VOLUME + DISPENSE_OFFSET)
         move_to(config, [WASTE_MEDIA_POS[0], WASTE_MEDIA_POS[1], SAFE_Z])
         control_syringe(config, -DISPENSE_OFFSET)
 
-        # Get fresh media
+        # get fresh media
         move_to(config, [FRESH_MEDIA_POS[0], FRESH_MEDIA_POS[1], SAFE_Z])
         move_to(config, [FRESH_MEDIA_POS[0], FRESH_MEDIA_POS[1], EXTRACT_Z_DISH])
         control_syringe(config, -EXCHANGE_MEDIA_VOLUME)
         move_to(config, [FRESH_MEDIA_POS[0], FRESH_MEDIA_POS[1], SAFE_Z])
 
-        # Dispense fresh media into well
+        # dispense fresh media into well
         move_to(config, [x, y, SAFE_Z])
         move_to(config, [x, y, EXTRACT_Z])
         control_syringe(config, EXCHANGE_MEDIA_VOLUME + DISPENSE_OFFSET)
@@ -414,16 +412,10 @@ def main():
     base_output_dir = "mediax_output"
     camera_id = 0
     yolo_path = "/home/pi/Documents/organoid/best.pt"
-
-    # 1) Load config and skip wells
     config = load_config(config_path)
     skip_well_set = load_skip_wells(skip_wells_path)
-
-    # 2) Create final output directory
     final_save_dir = make_new_session_directory(base_output_dir)
-
     try:
-        # 3) Run main procedure
         run_media_exchange(
             config=config,
             skip_well_set=skip_well_set,
@@ -431,13 +423,11 @@ def main():
             camera_id=camera_id,
             yolo_path=yolo_path
         )
-
     except KeyboardInterrupt:
         log("User triggered Ctrl+C. Aborting run.")
     except Exception as e:
         log(f"Caught unexpected error: {e}")
     finally:
-        # 4) Save logs to a file in the same directory
         save_logs(final_save_dir, "session.log")
 
 if __name__ == "__main__":
