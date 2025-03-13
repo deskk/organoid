@@ -1,0 +1,2 @@
+check IP address:
+ifconfig

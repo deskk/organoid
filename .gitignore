@@ -1,3 +1,10 @@
-organoid.py
-demo.py
-pipet.py
+data
+debug_out
+inference
+mediax_output
+pictures
+recordings
+tmp/test1
+video
+best.pt
+Miniforge3-Linux-aarch64.sh
